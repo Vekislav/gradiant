@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gradient & Topographic Generator</title>
+    <style>
+        :root {
+            --background-color: #f4f4f4;
+            --text-color: #000;
+            --button-bg-color: #007BFF;
+            --button-text-color: #fff;
+        }
+
+        [data-theme="dark"] {
+            --background-color: #1e1e1e;
+            --text-color: #fff;
+            --button-bg-color: #444;
+            --button-text-color: #fff;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            background: linear-gradient(to bottom, #000, #fff); /* Placeholder */
+            background-size: cover;
+            transition: background 0.3s ease-in-out, color 0.3s;
+            color: var(--text-color);
+            background-color: var(--background-color);
+        }
+
+        .sidebar {
+            width: 250px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+            border-radius: 0 20px 20px 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+
+        .sidebar button, .sidebar select, .sidebar input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            font-size: 14px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: var(--button-bg-color);
+            color: var(--button-text-color);
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .sidebar input[type="color"] {
+            padding: 5px;
+        }
+
+        .sidebar button:hover {
+            opacity: 0.9;
+        }
+
+        .preview {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        #gradient-preview {
+            width: 80%;
+            height: 80%;
+            border: 2px solid #ccc;
+            border-radius: 20px;
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        canvas {
+            display: none;
+        }
+
+        .theme-toggle {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body data-theme="light">
+    <div class="sidebar">
+        <h2>Controls</h2>
+        <label>Color 1:</label>
+        <input type="color" id="color1" value="#ff0000" onchange="generateGradient()">
+        <label>Color 2:</label>
+        <input type="color" id="color2" value="#0000ff" onchange="generateGradient()">
+        <label>Direction:</label>
+        <select id="direction" onchange="generateGradient()">
+            <option value="to right">Left to Right</option>
+            <option value="to left">Right to Left</option>
+            <option value="to top">Bottom to Top</option>
+            <option value="to bottom">Top to Bottom</option>
+        </select>
+        <label>Resolution:</label>
+        <select id="resolution" onchange="updateResolution()">
+            <option value="400x400">400x400</option>
+            <option value="800x800">800x800</option>
+            <option value="1920x1080">1920x1080</option>
+            <option value="custom">Custom...</option>
+        </select>
+        <div id="custom-resolution" style="display: none;">
+            <label>Width: <input type="number" id="custom-width" value="400" onchange="updateCustomResolution()"></label>
+            <label>Height: <input type="number" id="custom-height" value="400" onchange="updateCustomResolution()"></label>
+        </div>
+        <button onclick="generateGradient()">Generate Gradient</button>
+        <button onclick="generateRandomGradient()">Random Gradient</button>
+        <button onclick="generateTopographic()">Topographic Pattern</button>
+        <button onclick="saveImage()">Save Image</button>
+        <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+    <div class="preview">
+        <div id="gradient-preview"></div>
+    </div>
+    <canvas id="canvas" width="400" height="400"></canvas>
+
+    <script>
+        const gradientPreview = document.getElementById('gradient-preview');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function updateResolution() {
+            const resolution = document.getElementById('resolution').value;
+            const customResolution = document.getElementById('custom-resolution');
+
+            if (resolution === 'custom') {
+                customResolution.style.display = 'block';
+            } else {
+                customResolution.style.display = 'none';
+                const [width, height] = resolution.split('x').map(Number);
+                setCanvasResolution(width, height);
+            }
+        }
+
+        function updateCustomResolution() {
+            const width = parseInt(document.getElementById('custom-width').value) || 400;
+            const height = parseInt(document.getElementById('custom-height').value) || 400;
+            setCanvasResolution(width, height);
+        }
+
+        function setCanvasResolution(width, height) {
+            canvas.width = width;
+            canvas.height = height;
+            generateGradient();
+        }
+
+        function generateGradient() {
+            const color1 = document.getElementById('color1').value;
+            const color2 = document.getElementById('color2').value;
+            const direction = document.getElementById('direction').value;
+
+            const gradient = ctx.createLinearGradient(
+                direction === 'to right' ? 0 : canvas.width,
+                direction === 'to bottom' ? 0 : canvas.height,
+                direction === 'to left' ? canvas.width : 0,
+                direction === 'to top' ? canvas.height : 0
+            );
+            gradient.addColorStop(0, color1);
+            gradient.addColorStop(1, color2);
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            updatePreview();
+            updateBackground(color1, color2, direction);
+        }
+
+        function generateRandomGradient() {
+            const randomColor1 = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+            const randomColor2 = `#${Math.floor(Math.random() * 16777215).toString(16)}`;
+            const directions = ['to right', 'to left', 'to top', 'to bottom'];
+            const randomDirection = directions[Math.floor(Math.random() * directions.length)];
+
+            document.getElementById('color1').value = randomColor1;
+            document.getElementById('color2').value = randomColor2;
+            document.getElementById('direction').value = randomDirection;
+
+            generateGradient();
+        }
+
+        function generateTopographic() {
+            const colors = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3'];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            for (let i = 0; i < 20; i++) {
+                ctx.beginPath();
+                ctx.strokeStyle = colors[Math.floor(Math.random() * colors.length)];
+                ctx.lineWidth = Math.random() * 2 + 1;
+                ctx.arc(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height,
+                    Math.random() * 200,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.stroke();
+            }
+
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const imageData = canvas.toDataURL();
+            gradientPreview.style.background = `url(${imageData})`;
+            gradientPreview.style.backgroundSize = 'cover';
+        }
+
+        function updateBackground(color1, color2, direction) {
+            const invertedDirection = {
+                'to right': 'to left',
+                'to left': 'to right',
+                'to top': 'to bottom',
+                'to bottom': 'to top'
+            }[direction];
+
+            document.body.style.background = `linear-gradient(${invertedDirection}, ${color2}88, ${color1}88)`;
+        }
+
+        function saveImage() {
+            const link = document.createElement('a');
+            const format = prompt("Enter format: png or jpg", "png").toLowerCase();
+
+            if (format !== "png" && format !== "jpg") {
+                alert("Invalid format. Saving as PNG.");
+                format = "png";
+            }
+
+            link.href = canvas.toDataURL(`image/${format}`);
+            link.download = `gradient.${format}`;
+            link.click();
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', newTheme);
+        }
+    </script>
+</body>
+</html>
