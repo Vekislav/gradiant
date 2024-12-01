@@ -6,10 +6,11 @@
     <title>Gradient & Topographic Generator</title>
     <style>
         :root {
-			--background-color: #1e1e1e;
+            --background-color: #1e1e1e;
             --text-color: #fff;
             --button-bg-color: #444;
             --button-text-color: #fff;
+            --transition-speed: 0.3s;
         }
 
         [data-theme="dark"] {
@@ -21,12 +22,11 @@
 
         body {
             margin: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             display: flex;
             height: 100vh;
-            background: linear-gradient(to bottom, #000, #fff); /* Placeholder */
-            background-size: cover;
-            transition: background 0.3s ease-in-out, color 0.3s;
+            background: linear-gradient(to bottom, #000, #fff);
+            transition: background var(--transition-speed), color var(--transition-speed);
             color: var(--text-color);
             background-color: var(--background-color);
         }
@@ -56,7 +56,7 @@
             box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.1);
             background-color: var(--button-bg-color);
             color: var(--button-text-color);
-            transition: background 0.3s, color 0.3s;
+            transition: all var(--transition-speed) ease-in-out;
         }
 
         .sidebar input[type="color"] {
@@ -65,6 +65,7 @@
 
         .sidebar button:hover {
             opacity: 0.9;
+            transform: scale(1.05);
         }
 
         .preview {
@@ -85,6 +86,7 @@
             justify-content: center;
             align-items: center;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: background var(--transition-speed);
         }
 
         canvas {
@@ -94,9 +96,32 @@
         .theme-toggle {
             margin-top: 10px;
         }
+
+        /* New Green Home Button */
+        .home-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .home-btn:hover {
+            background-color: darkgreen;
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body data-theme="light">
+    <!-- Green Home Button -->
+    <button class="home-btn" onclick="window.location.href='https://vekislav.github.io/gradiant/'">Home</button>
+
     <div class="sidebar">
         <h2>Controls</h2>
         <label>Color 1:</label>
@@ -127,9 +152,11 @@
         <button onclick="saveImage()">Save Image</button>
         <button class="theme-toggle" onclick="toggleTheme()">Toggle Theme</button>
     </div>
+
     <div class="preview">
         <div id="gradient-preview"></div>
     </div>
+
     <canvas id="canvas" width="400" height="400"></canvas>
 
     <script>
@@ -231,12 +258,12 @@
                 'to bottom': 'to top'
             }[direction];
 
-            document.body.style.background = `linear-gradient(${invertedDirection}, ${color2}88, ${color1}88)`;
+            document.body.style.background = `linear-gradient(${invertedDirection}, ${color2}88 , ${color1}88)`;
         }
 
         function saveImage() {
             const link = document.createElement('a');
-            const format = prompt("Enter format: png or jpg", "png").toLowerCase();
+            let format = prompt("Enter format: png or jpg", "png").toLowerCase();
 
             if (format !== "png" && format !== "jpg") {
                 alert("Invalid format. Saving as PNG.");
